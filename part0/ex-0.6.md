@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
   participant browser
   participant server
@@ -8,3 +9,4 @@ sequenceDiagram
   deactivate server
 
   Note: browser adds new li element to notes list with message entered by user
+```
