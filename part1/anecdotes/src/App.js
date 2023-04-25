@@ -16,6 +16,23 @@ const Button = ({ handleClick, text }) => {
   )
 }
 
+const Header = ({ title }) => {
+  return (
+    <h1>{title}</h1>
+  )
+}
+
+const VoteDisplay = ({ voteCount }) => {
+  if (voteCount === 1)
+    return (
+      <div>has {voteCount} vote</div>
+    )
+  else
+    return (
+      <div>has {voteCount} votes</div>
+    )
+}
+
 const App = () => {
   const anecdotes = [
     'If it hurts, do it more often.',
@@ -30,12 +47,32 @@ const App = () => {
 
   const [selected, setSelected] = useState(0)
 
+  const [points, setPoints] = useState({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 })
+
+  const handleGenerate = () => {
+    const currentIdx = selected
+    const newIdx = getArrayIdx(currentIdx)
+    setSelected(newIdx)
+  }
+
+  const handleVote = () => {
+    const newVal = points[selected] + 1
+    const idx = selected;
+    setPoints({ ...points, [idx]: newVal })
+  }
+
   return (
     <>
+      <Header title="Anecdote of the day" />
       <div>
         {anecdotes[selected]}
       </div>
-      <Button handleClick={() => setSelected(getArrayIdx(selected))} text="Generate an anecdote" />
+      <Button handleClick={handleGenerate} text="next anecdote" />
+      <Button handleClick={handleVote} text="vote" />
+      <VoteDisplay voteCount={points[selected]} />
+
+
+      <Header title="Anecdote with most votes" />
     </>
   )
 }
