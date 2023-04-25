@@ -8,6 +8,12 @@ const getArrayIdx = (current) => {
     return randomNum
 }
 
+const getIdxOfMax = (obj) => {
+  let maxVal = Math.max(...Object.values(obj))
+  let keyForMaxVal = Object.keys(obj).find(key => obj[key] === maxVal)
+  return keyForMaxVal
+}
+
 const Button = ({ handleClick, text }) => {
   return (
     <button onClick={handleClick}>
@@ -34,6 +40,7 @@ const VoteDisplay = ({ voteCount }) => {
 }
 
 const App = () => {
+
   const anecdotes = [
     'If it hurts, do it more often.',
     'Adding manpower to a late software project makes it later!',
@@ -47,6 +54,8 @@ const App = () => {
 
   const [selected, setSelected] = useState(0)
 
+  const [max, setMax] = useState(0)
+
   const [points, setPoints] = useState({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 })
 
   const handleGenerate = () => {
@@ -58,7 +67,13 @@ const App = () => {
   const handleVote = () => {
     const newVal = points[selected] + 1
     const idx = selected;
-    setPoints({ ...points, [idx]: newVal })
+
+    const newPoints = { ...points, [idx]: newVal }
+
+    const newMax = (getIdxOfMax(newPoints))
+
+    setMax(newMax)
+    setPoints(newPoints)
   }
 
   return (
@@ -73,6 +88,10 @@ const App = () => {
 
 
       <Header title="Anecdote with most votes" />
+      <div>
+        {anecdotes[max]}
+      </div>
+      <div>has {points[max]} votes</div>
     </>
   )
 }
