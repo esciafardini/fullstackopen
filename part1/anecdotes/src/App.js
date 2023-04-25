@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 const getArrayIdx = (current) => {
   let randomNum = Math.floor(Math.random() * 8)
-  if (randomNum == current)
+  if (randomNum === current)
     return getArrayIdx(randomNum)
   else
     return randomNum
