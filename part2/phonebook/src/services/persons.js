@@ -26,12 +26,20 @@ const deletePerson = (id) => {
 }
 
 
-const updatePhoneNumber = (newObj) => {
+const updatePhoneNumber = (newObj, success, error) => {
   const request = axios.put(`${baseUrl}/${newObj.id}`, newObj)
 
   return request
-    .then((res) => res.data)
-    .catch((err) => console.log(err))
+    .then((res) => {
+      success()
+      return res.data
+    }
+    )
+    .catch((err) => {
+      error()
+      console.log(err)
+    }
+    )
 }
 
 export default { getAll, createNew, deletePerson, updatePhoneNumber }

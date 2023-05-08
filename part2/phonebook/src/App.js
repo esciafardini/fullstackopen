@@ -32,7 +32,7 @@ const Persons = ({ persons, nameFilter, deleteClick }) => {
         .filter((person) => person.name.toLowerCase().match(nameFilter.toLowerCase()))
         .map((person) => {
           return (
-            <div key={person.id}>{person.name} @ {person.number}
+            <div key={person.name}>{person.name} @ {person.number}
               <button onClick={() => deleteClick(person.id)}>delete</button>
             </div>
           )
@@ -40,6 +40,16 @@ const Persons = ({ persons, nameFilter, deleteClick }) => {
       }
     </>
   )
+}
+
+const Notification = ({ notificationClass, message }) => {
+  if (message !== null) {
+    return (
+      <div className={notificationClass}>{message}</div>
+    )
+  } else {
+    return null
+  }
 }
 
 const App = () => {
@@ -55,6 +65,17 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [nameFilter, setNameFilter] = useState('')
+  const [message, setMessage] = useState(null)
+  const [notificationClass, setNotificiationClass] = useState(null)
+
+  const notify = (className, message) => {
+    setNotificiationClass(className)
+    setMessage(message)
+
+    setTimeout(() => {
+      setMessage(null)
+    }, 5000)
+  }
 
   const submitClick = (e) => {
     e.preventDefault()
@@ -63,17 +84,32 @@ const App = () => {
 
     if (existingPersonWithSameName && (window.confirm("This person already exists.  Do you want to update their phone number?"))) {
 
-      personService.updatePhoneNumber({ ...existingPersonWithSameName, number: newNumber })
+      const success = () => {
+        setPersons(persons.filter((obj) => obj.id !== existingPersonWithSameName.id)
+          .concat([{ name: newName, number: newNumber, id: existingPersonWithSameName.id }]))
 
-      setPersons(persons.filter((obj) => obj.id !== existingPersonWithSameName.id)
-        .concat([{ name: newName, number: newNumber, id: existingPersonWithSameName.id }]))
+        notify('success-msg', `Updated ${newName}`)
+      }
+
+      const failure = () => {
+        // out of sync bc another user is deleting objects, Re-Fetch
+        personService.getAll().then((persons) => persons && setPersons(persons))
+        notify('error-msg', `Failure: ${newName} was removed from the db`)
+      }
+
+      personService.updatePhoneNumber({ ...existingPersonWithSameName, number: newNumber }, success, failure)
 
     } else {
 
-      personService.createNew({ name: newName, number: newNumber, id: persons.length + 1 })
-      setPersons(persons.concat([{ name: newName, number: newNumber, id: persons.length + 1 }]))
+      personService.createNew({ name: newName, number: newNumber })
 
+      setPersons(persons.concat([{ name: newName, number: newNumber }]))
+
+      notify('success-msg', `Added ${newName}`)
     }
+
+    setNewName('')
+    setNewNumber('')
   }
 
   const submitDelete = (id) => {
@@ -85,7 +121,8 @@ const App = () => {
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
+      <Notification notificationClass={notificationClass} message={message} />
       <Filter nameFilter={nameFilter} setNameFilter={setNameFilter} />
       <h3>Add a new</h3>
       <PersonForm newName={newName} setNewName={setNewName} newNumber={newNumber} setNewNumber={setNewNumber} submitClick={submitClick} />
