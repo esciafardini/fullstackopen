@@ -1,28 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const CountryDisplay = ({ country, weather }) => {
 
-  let icon = weather.weather[0].icon
+  const { name, capital, area, languages, flags } = country
+  const { main, wind } = weather
+  const { icon } = weather.weather[0]
 
   return <>
-    <h1>{country.name.common}</h1>
-    <div>capital: {country.capital[0]}</div>
-    <div>area: {country.area}</div>
+    <h1>{name.common}</h1>
+    <div>capital: {capital[0]}</div>
+    <div>area: {area}</div>
     <p>languages:</p>
     <ul>
-      {Object.values(country.languages).map((obj) => <li key={obj}>{obj}</li>)}
+      {Object.values(languages).map((obj) => <li key={obj}>{obj}</li>)}
     </ul>
-    <img src={country.flags['png']} alt="FLAG" />
+    <img src={flags['png']} alt="FLAG" />
     <h2>
-      Weather in {country.capital}:
+      Weather in {capital}:
     </h2>
     <div>
-      temperature: {Math.round((weather.main.temp - 273.15) * 100) / 100}&deg; Celcius
+      temperature: {Math.round((main.temp - 273.15) * 100) / 100}&deg; Celcius
     </div>
     <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt="alternatetext" />
     <div>
-      wind: {weather.wind.speed} m/s
+      wind: {wind.speed} m/s
     </div>
   </>
 }
@@ -49,30 +51,50 @@ function App() {
   const [weather, setWeather] = useState(null)
 
   const apiKey = process.env.REACT_APP_W;
+  const weatherUrl = 'https://restcountries.com/v3.1/all'
 
+  console.log('rendered')
 
-  const clickShow = (country) => {
-    setCountry(country)
-    setSearch(country.name.common)
-    setLatLng(country.capitalInfo.latlng)
-    setShow(true)
-  }
+  const clickShow = useCallback((country) => {
+    setCountry(country);
+    setSearch(country.name.common);
+    setLatLng(country.capitalInfo.latlng);
+    setShow(true);
+  }, []);
+
+  const getCountries = useCallback(async () => {
+    try {
+      const res = await axios.get(weatherUrl);
+      setCountries(res.data)
+    } catch (error) {
+      console.log(error)
+    }
+  }, [])
+
+  const getWeather = useCallback(async (lat, lon) => {
+    try {
+      const res = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}`)
+      setWeather(res.data)
+    } catch (error) {
+      console.log(error)
+    }
+  }, [apiKey])
 
   useEffect(() => {
-    axios.get('https://restcountries.com/v3.1/all')
-      .then((res) => setCountries(res.data))
+    getCountries()
   }, [])
 
   useEffect(() => {
     setFilteredCountries(countries.filter((countryInfo) => countryInfo.name.common.toLowerCase().includes(search.toLowerCase())))
-  }, [search])
+  }, [search, countries])
 
   useEffect(() => {
     let lat = latLng[0]
     let lon = latLng[1]
-    lat && lon && axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}`)
-      .then((res) => setWeather(res.data))
-  }, [latLng])
+    if (lat && lon) {
+      getWeather(lat, lon)
+    }
+  }, [latLng, apiKey, getWeather])
 
   return (
     <>
